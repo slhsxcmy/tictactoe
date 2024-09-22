@@ -31,11 +31,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+      - name: Setup pnpm # https://github.com/pnpm/action-setup?tab=readme-ov-file
+        uses: pnpm/action-setup@v4.0.0
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
-          # cache: "pnpm"
+          cache: "pnpm"
       - name: Install dependencies
         run: pnpm install
       - name: Build
