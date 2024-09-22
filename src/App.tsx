@@ -1,5 +1,12 @@
+import { GameProvider } from "./client/context";
+import { Game } from "./client/Game";
+
 function App() {
-  return <h1>Hello World</h1>;
+  return (
+    <GameProvider>
+      <Game />
+    </GameProvider>
+  );
 }
 
 export default App;
