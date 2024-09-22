@@ -13,13 +13,7 @@ export function Game() {
 function Reset() {
   const { reset } = useGameContext();
   return (
-    <button
-      style={{
-        fontSize: 20,
-      }}
-      type="button"
-      onClick={reset}
-    >
+    <button style={{ fontSize: 20 }} type="button" onClick={reset}>
       Reset game
     </button>
   );
@@ -36,46 +30,50 @@ function GameBoard() {
         height: 600,
       }}
     >
-      {board.map((row, r) => {
-        return row.map((cell, c) => {
-          return (
-            <button
-              key={c}
-              style={{
-                border: "1px black solid",
-                fontSize: 30,
-              }}
-              type="button"
-              onClick={() => {
-                setCell(r, c, progress === "alicePlay" ? "X" : "O");
-              }}
-              disabled={
-                cell !== " " || ["aliceWin", "bobWin"].includes(progress)
-              }
-            >
-              {cell}
-            </button>
-          );
-        });
-      })}
+      {board.map((cell, index) => (
+        <GameCell
+          key={index}
+          cell={cell}
+          onClick={() => setCell(Math.floor(index / 3), index % 3)}
+          disabled={cell !== " " || ["aliceWin", "bobWin"].includes(progress)}
+        />
+      ))}
     </div>
+  );
+}
+
+function GameCell({
+  cell,
+  onClick,
+  disabled,
+}: {
+  cell: string;
+  onClick: () => void;
+  disabled: boolean;
+}) {
+  return (
+    <button
+      style={{
+        border: "1px black solid",
+        fontSize: 30,
+      }}
+      type="button"
+      onClick={onClick}
+      disabled={disabled}
+    >
+      {cell}
+    </button>
   );
 }
 
 function GameState() {
   const { progress } = useGameContext();
-  switch (progress) {
-    case "alicePlay":
-      return <h1>Alice to play.</h1>;
-    case "bobPlay":
-      return <h1>Bob to play.</h1>;
-    case "aliceWin":
-      return <h1>Alice won!</h1>;
-    case "bobWin":
-      return <h1>Bob won!</h1>;
-    case "tie":
-      return <h1>It's a tie!</h1>;
-    default:
-      throw new Error(`Unknown progress ${progress satisfies never}`);
-  }
+  const messages: Record<string, string> = {
+    alicePlay: "Alice to play.",
+    bobPlay: "Bob to play.",
+    aliceWin: "Alice won!",
+    bobWin: "Bob won!",
+    tie: "It's a tie!",
+  };
+  return <h1>{messages[progress]}</h1>;
 }
