@@ -23,13 +23,13 @@ function GameBoard() {
       {[0, 1, 2].map((r) => {
         return [0, 1, 2].map((c) => {
           return (
-            <div
+            <button
               style={{
                 border: "1px black solid",
               }}
             >
               {r} {c}
-            </div>
+            </button>
           );
         });
       })}
