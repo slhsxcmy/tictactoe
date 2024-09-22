@@ -13,6 +13,7 @@ type TGameContext = {
   //   setGameState: React.Dispatch<React.SetStateAction<TGameState>>;
   board: TBoard;
   setCell: (r: number, c: number, cell: TCell) => void;
+  reset: () => void;
 };
 
 const GameContext = React.createContext<TGameContext | null>(null);
@@ -29,12 +30,15 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     (r: number, c: number, cell: TCell) => {
       const newBoard = structuredClone(board);
       if (newBoard[r][c] !== " " && newBoard[r][c] !== cell) {
-        newBoard[r][c] = cell;
+        throw new Error("The other player has set this cell");
       }
+      newBoard[r][c] = cell;
+
+      //   console.log(r, c, cell, JSON.stringify(newBoard, null, 2));
 
       let win = null;
       // check victory
-      for (let i = 0; r < 3; i += 1) {
+      for (let i = 0; i < 3; i += 1) {
         if (
           newBoard[i][0] !== " " &&
           newBoard[i][0] === newBoard[i][1] &&
@@ -84,8 +88,17 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     [board]
   );
 
+  const reset = React.useCallback(() => {
+    setBoard([
+      [" ", " ", " "],
+      [" ", " ", " "],
+      [" ", " ", " "],
+    ]);
+    setGameState("alicePlay");
+  }, []);
+
   return (
-    <GameContext.Provider value={{ gameState, board, setCell }}>
+    <GameContext.Provider value={{ gameState, board, setCell, reset }}>
       {children}
     </GameContext.Provider>
   );

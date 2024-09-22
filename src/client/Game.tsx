@@ -6,11 +6,28 @@ export function Game() {
     <>
       <GameState />
       <GameBoard />
+      <Reset />
     </>
   );
 }
 
+function Reset() {
+  const { reset } = useGameContext();
+  return (
+    <button
+      style={{
+        fontSize: 20,
+      }}
+      type="button"
+      onClick={reset}
+    >
+      Reset game
+    </button>
+  );
+}
+
 function GameBoard() {
+  const { board, setCell, gameState } = useGameContext();
   return (
     <div
       style={{
@@ -20,15 +37,23 @@ function GameBoard() {
         height: 600,
       }}
     >
-      {[0, 1, 2].map((r) => {
-        return [0, 1, 2].map((c) => {
+      {board.map((row, r) => {
+        return row.map((cell, c) => {
           return (
             <button
               style={{
                 border: "1px black solid",
+                fontSize: 30,
               }}
+              type="button"
+              onClick={() => {
+                setCell(r, c, gameState === "alicePlay" ? "X" : "O");
+              }}
+              disabled={
+                cell !== " " || ["aliceWin", "bobWin"].includes(gameState)
+              }
             >
-              {r} {c}
+              {cell}
             </button>
           );
         });
