@@ -26,7 +26,7 @@ function Reset() {
 }
 
 function GameBoard() {
-  const { board, setCell, gameState } = useGameContext();
+  const { board, setCell, progress } = useGameContext();
   return (
     <div
       style={{
@@ -40,16 +40,17 @@ function GameBoard() {
         return row.map((cell, c) => {
           return (
             <button
+              key={c}
               style={{
                 border: "1px black solid",
                 fontSize: 30,
               }}
               type="button"
               onClick={() => {
-                setCell(r, c, gameState === "alicePlay" ? "X" : "O");
+                setCell(r, c, progress === "alicePlay" ? "X" : "O");
               }}
               disabled={
-                cell !== " " || ["aliceWin", "bobWin"].includes(gameState)
+                cell !== " " || ["aliceWin", "bobWin"].includes(progress)
               }
             >
               {cell}
@@ -62,8 +63,8 @@ function GameBoard() {
 }
 
 function GameState() {
-  const { gameState } = useGameContext();
-  switch (gameState) {
+  const { progress } = useGameContext();
+  switch (progress) {
     case "alicePlay":
       return <h1>Alice to play.</h1>;
     case "bobPlay":
@@ -72,7 +73,9 @@ function GameState() {
       return <h1>Alice won!</h1>;
     case "bobWin":
       return <h1>Bob won!</h1>;
+    case "tie":
+      return <h1>It's a tie!</h1>;
     default:
-      throw new Error(`Unknown gameState ${gameState satisfies never}`);
+      throw new Error(`Unknown progress ${progress satisfies never}`);
   }
 }

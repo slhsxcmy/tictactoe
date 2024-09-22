@@ -1,6 +1,6 @@
 import React from "react";
 
-type TGameState = "alicePlay" | "bobPlay" | "aliceWin" | "bobWin";
+type TProgress = "alicePlay" | "bobPlay" | "aliceWin" | "bobWin" | "tie";
 type TCell = " " | "X" | "O";
 type TBoard = [
   [TCell, TCell, TCell],
@@ -9,8 +9,7 @@ type TBoard = [
 ];
 
 type TGameContext = {
-  gameState: TGameState;
-  //   setGameState: React.Dispatch<React.SetStateAction<TGameState>>;
+  progress: TProgress;
   board: TBoard;
   setCell: (r: number, c: number, cell: TCell) => void;
   reset: () => void;
@@ -18,87 +17,103 @@ type TGameContext = {
 
 const GameContext = React.createContext<TGameContext | null>(null);
 
-export function GameProvider({ children }: { children: React.ReactNode }) {
-  const [gameState, setGameState] = React.useState<TGameState>("alicePlay");
-  const [board, setBoard] = React.useState<TBoard>([
-    [" ", " ", " "],
-    [" ", " ", " "],
-    [" ", " ", " "],
-  ]);
+const initialBoard: TBoard = [
+  [" ", " ", " "],
+  [" ", " ", " "],
+  [" ", " ", " "],
+];
 
-  const setCell = React.useCallback(
-    (r: number, c: number, cell: TCell) => {
-      const newBoard = structuredClone(board);
-      if (newBoard[r][c] !== " " && newBoard[r][c] !== cell) {
-        throw new Error("The other player has set this cell");
+export function GameProvider({ children }: { children: React.ReactNode }) {
+  const [game, setGame] = React.useState<{
+    progress: TProgress;
+    board: TBoard;
+  }>({
+    progress: "alicePlay",
+    board: initialBoard,
+  });
+
+  const checkWin = (board: TBoard, player: TCell): boolean => {
+    const winPatterns = [
+      [
+        [0, 0],
+        [0, 1],
+        [0, 2],
+      ],
+      [
+        [1, 0],
+        [1, 1],
+        [1, 2],
+      ],
+      [
+        [2, 0],
+        [2, 1],
+        [2, 2],
+      ], // rows
+      [
+        [0, 0],
+        [1, 0],
+        [2, 0],
+      ],
+      [
+        [0, 1],
+        [1, 1],
+        [2, 1],
+      ],
+      [
+        [0, 2],
+        [1, 2],
+        [2, 2],
+      ], // columns
+      [
+        [0, 0],
+        [1, 1],
+        [2, 2],
+      ],
+      [
+        [0, 2],
+        [1, 1],
+        [2, 0],
+      ], // diagonals
+    ];
+
+    return winPatterns.some((pattern) =>
+      pattern.every(([r, c]) => board[r][c] === player)
+    );
+  };
+
+  const setCell = React.useCallback((r: number, c: number, cell: TCell) => {
+    setGame((prevGame) => {
+      const newBoard = structuredClone(prevGame.board);
+      if (newBoard[r][c] !== " ") {
+        throw new Error(`This cell (${r}, ${c}) has been set`);
       }
       newBoard[r][c] = cell;
 
-      //   console.log(r, c, cell, JSON.stringify(newBoard, null, 2));
-
-      let win = null;
-      // check victory
-      for (let i = 0; i < 3; i += 1) {
-        if (
-          newBoard[i][0] !== " " &&
-          newBoard[i][0] === newBoard[i][1] &&
-          newBoard[i][0] === newBoard[i][2]
-        ) {
-          win = newBoard[i][0];
-        }
-
-        if (
-          newBoard[0][i] !== " " &&
-          newBoard[0][i] === newBoard[1][i] &&
-          newBoard[0][i] === newBoard[2][i]
-        ) {
-          win = newBoard[0][i];
-        }
-      }
-
-      if (
-        newBoard[1][1] !== " " &&
-        newBoard[1][1] === newBoard[0][0] &&
-        newBoard[1][1] === newBoard[2][2]
-      ) {
-        win = newBoard[1][1];
-      }
-
-      if (
-        newBoard[1][1] !== " " &&
-        newBoard[1][1] === newBoard[0][2] &&
-        newBoard[1][1] === newBoard[2][0]
-      ) {
-        win = newBoard[1][1];
-      }
-
-      setBoard(newBoard);
-      if (win === "X") {
-        setGameState("aliceWin");
-      } else if (win === "O") {
-        setGameState("bobWin");
-      } else if (cell === "X") {
-        setGameState("bobPlay");
-      } else if (cell === "O") {
-        setGameState("alicePlay");
+      let newProgress: TProgress;
+      if (checkWin(newBoard, cell)) {
+        newProgress = cell === "X" ? "aliceWin" : "bobWin";
+      } else if (newBoard.flat().every((cell) => cell !== " ")) {
+        newProgress = "tie";
       } else {
-        throw new Error("Unknown next gameState");
+        newProgress = cell === "X" ? "bobPlay" : "alicePlay";
       }
-    },
-    [board]
-  );
+
+      return {
+        board: newBoard,
+        progress: newProgress,
+      };
+    });
+  }, []);
 
   const reset = React.useCallback(() => {
-    setBoard([
-      [" ", " ", " "],
-      [" ", " ", " "],
-      [" ", " ", " "],
-    ]);
-    setGameState("alicePlay");
+    setGame({
+      progress: "alicePlay",
+      board: initialBoard,
+    });
   }, []);
 
   return (
-    <GameContext.Provider value={{ gameState, board, setCell, reset }}>
+    <GameContext.Provider value={{ ...game, setCell, reset }}>
       {children}
     </GameContext.Provider>
   );
@@ -107,7 +122,7 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
 export function useGameContext() {
   const context = React.useContext(GameContext);
   if (!context) {
-    throw new Error("useGameContext must be used in GameProvider");
+    throw new Error("useGameContext must be used within a GameProvider");
   }
   return context;
 }
